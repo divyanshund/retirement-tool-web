@@ -72,17 +72,21 @@ body {
     gap: 16px;
 }
 
-.header-logo {
-    height: 32px;
-    width: auto;
-    object-fit: contain;
+.header-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
 }
 
 .header-title-group {
     display: flex;
     flex-direction: column;
-    border-left: 1px solid var(--border);
-    padding-left: 16px;
 }
 
 .header h1 {
@@ -913,13 +917,6 @@ input[type="number"]::-webkit-outer-spin-button {
     flex-direction: column;
     align-items: center;
     gap: 12px;
-}
-
-.footer-logo {
-    height: 24px;
-    width: auto;
-    object-fit: contain;
-    opacity: 0.5;
 }
 
 .footer p {
