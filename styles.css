@@ -1020,3 +1020,160 @@ input[type="number"]::-webkit-outer-spin-button {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
 }
+
+/* ============================================
+   Onboarding Popup
+   ============================================ */
+.onboarding-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(26, 43, 60, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: overlayIn 0.3s ease;
+}
+
+.onboarding-overlay.hidden {
+    animation: overlayOut 0.3s ease forwards;
+    pointer-events: none;
+}
+
+@keyframes overlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes overlayOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.onboarding-modal {
+    background: #FFFFFF;
+    border-radius: 20px;
+    padding: 40px 36px 32px;
+    max-width: 460px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0,0,0,0.04);
+    animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.onboarding-overlay.hidden .onboarding-modal {
+    animation: modalOut 0.25s ease forwards;
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modalOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(12px) scale(0.97); }
+}
+
+.onboarding-lottie {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.onboarding-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+}
+
+.onboarding-text {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.onboarding-features {
+    list-style: none;
+    text-align: left;
+    margin: 0 auto 24px;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.onboarding-features li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.onboarding-features li svg {
+    flex-shrink: 0;
+}
+
+.onboarding-cta {
+    width: 100%;
+    padding: 14px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-pill);
+    font-family: var(--font);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+    margin-bottom: 16px;
+}
+
+.onboarding-cta:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.onboarding-cta:active {
+    transform: translateY(0);
+}
+
+.onboarding-dismiss {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+}
+
+.onboarding-dismiss input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+@media (max-width: 640px) {
+    .onboarding-modal {
+        padding: 28px 24px 24px;
+    }
+
+    .onboarding-title {
+        font-size: 1.15rem;
+    }
+
+    .onboarding-lottie dotlottie-player {
+        width: 160px !important;
+        height: 160px !important;
+    }
+}

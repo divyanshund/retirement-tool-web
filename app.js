@@ -866,3 +866,44 @@ function formatAxisValue(value) {
 // Make remove functions globally accessible (used by onclick in dynamic HTML)
 window.removePensionPot = removePensionPot;
 window.removeDBPension = removeDBPension;
+
+// ============================================
+// Onboarding Popup
+// ============================================
+(function initOnboarding() {
+    var overlay = document.getElementById('onboardingOverlay');
+    var cta = document.getElementById('onboardingCta');
+    var dontShow = document.getElementById('onboardingDontShow');
+
+    if (!overlay || !cta) return;
+
+    // Check if user opted out previously
+    if (localStorage.getItem('hideOnboarding') === 'true') {
+        overlay.style.display = 'none';
+        return;
+    }
+
+    function dismiss() {
+        if (dontShow && dontShow.checked) {
+            localStorage.setItem('hideOnboarding', 'true');
+        }
+        overlay.classList.add('hidden');
+        setTimeout(function () {
+            overlay.style.display = 'none';
+        }, 300);
+    }
+
+    cta.addEventListener('click', dismiss);
+
+    // Also dismiss on overlay background click
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) dismiss();
+    });
+
+    // Dismiss on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.style.display !== 'none') {
+            dismiss();
+        }
+    });
+})();
