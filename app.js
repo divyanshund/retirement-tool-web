@@ -5,7 +5,7 @@
 // ============================================
 // State
 // ============================================
-const state = {
+var DEFAULT_STATE = {
     currentAge: 30,
     retirementAge: 67,
     annualSalary: 35000,
@@ -24,8 +24,63 @@ const state = {
     desiredIncome: null, // null = use sustainable income
 };
 
+var state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
 let nextPotId = 1;
 let nextDbId = 1;
+
+// ============================================
+// LocalStorage Persistence
+// ============================================
+var STORAGE_KEY = 'retirementPlannerState';
+
+function saveState() {
+    try {
+        var toSave = {
+            currentAge: state.currentAge,
+            retirementAge: state.retirementAge,
+            annualSalary: state.annualSalary,
+            currentPotValue: state.currentPotValue,
+            employeeContrib: state.employeeContrib,
+            employerContrib: state.employerContrib,
+            additionalPots: state.additionalPots,
+            dbPensions: state.dbPensions,
+            growthRate: state.growthRate,
+            inflationRate: state.inflationRate,
+            lifeExpectancy: state.lifeExpectancy,
+            statePensionAge: state.statePensionAge,
+            statePensionAmount: state.statePensionAmount,
+            includeStatePension: state.includeStatePension,
+            takeLumpSum: state.takeLumpSum,
+            desiredIncome: state.desiredIncome,
+            nextPotId: nextPotId,
+            nextDbId: nextDbId,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    } catch (e) { /* storage full or unavailable */ }
+}
+
+function loadState() {
+    try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return false;
+        var parsed = JSON.parse(saved);
+        // Merge into state (only known keys)
+        var keys = Object.keys(DEFAULT_STATE);
+        for (var i = 0; i < keys.length; i++) {
+            if (parsed[keys[i]] !== undefined) {
+                state[keys[i]] = parsed[keys[i]];
+            }
+        }
+        if (parsed.nextPotId) nextPotId = parsed.nextPotId;
+        if (parsed.nextDbId) nextDbId = parsed.nextDbId;
+        return true;
+    } catch (e) { return false; }
+}
+
+function clearSavedState() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+}
 
 // ============================================
 // Constants
@@ -60,10 +115,90 @@ let incomeChart = null;
 // Initialization
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
+    var hadSaved = loadState();
+    populateFormFromState();
+    if (hadSaved) rebuildDynamicForms();
     setupEventListeners();
     createCharts();
     calculate();
 });
+
+/**
+ * Set all form input values from the current state object.
+ */
+function populateFormFromState() {
+    document.getElementById('currentAge').value = state.currentAge;
+    document.getElementById('retirementAge').value = state.retirementAge;
+    document.getElementById('annualSalary').value = formatNumber(state.annualSalary);
+    document.getElementById('currentPotValue').value = formatNumber(state.currentPotValue);
+    document.getElementById('employeeContrib').value = state.employeeContrib;
+    document.getElementById('employerContrib').value = state.employerContrib;
+    document.getElementById('inflationRate').value = state.inflationRate;
+    document.getElementById('lifeExpectancy').value = state.lifeExpectancy;
+    document.getElementById('statePensionAge').value = state.statePensionAge;
+    document.getElementById('statePensionAmount').value = formatNumber(state.statePensionAmount);
+    document.getElementById('takeLumpSum').checked = state.takeLumpSum;
+    document.getElementById('includeStatePension').checked = state.includeStatePension;
+
+    // Growth rate buttons
+    document.querySelectorAll('.growth-btn').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.rate === state.growthRate);
+    });
+}
+
+/**
+ * Rebuild additional pension pots and DB pensions from saved state.
+ * Called only when loading from localStorage.
+ */
+function rebuildDynamicForms() {
+    // Rebuild additional pots
+    var savedPots = state.additionalPots.slice();
+    state.additionalPots = []; // clear so addPensionPot pushes fresh
+    var savedNextPot = nextPotId;
+    for (var i = 0; i < savedPots.length; i++) {
+        var sp = savedPots[i];
+        nextPotId = sp.id; // set id so addPensionPot uses the same id
+        addPensionPot();
+        // Now fill in values
+        var potItem = document.getElementById('pot-' + sp.id);
+        if (potItem) {
+            potItem.querySelector('.pot-value').value = formatNumber(sp.value || 0);
+            potItem.querySelector('.pot-contribution').value = formatNumber(sp.monthlyContribution || 0);
+        }
+        // Update state entry
+        var potState = state.additionalPots.find(function (p) { return p.id === sp.id; });
+        if (potState) {
+            potState.value = sp.value || 0;
+            potState.monthlyContribution = sp.monthlyContribution || 0;
+            potState.name = sp.name || ('Pension pot ' + sp.id);
+        }
+    }
+    nextPotId = savedNextPot;
+
+    // Rebuild DB pensions
+    var savedDbs = state.dbPensions.slice();
+    state.dbPensions = [];
+    var savedNextDb = nextDbId;
+    for (var j = 0; j < savedDbs.length; j++) {
+        var sd = savedDbs[j];
+        nextDbId = sd.id;
+        // Temporarily set retirementAge for default startAge
+        addDBPension();
+        var dbItem = document.getElementById('db-' + sd.id);
+        if (dbItem) {
+            dbItem.querySelector('.db-provider').value = sd.provider || '';
+            dbItem.querySelector('.db-income').value = formatNumber(sd.annualIncome || 0);
+            dbItem.querySelector('.db-start-age').value = sd.startAge || state.retirementAge;
+        }
+        var dbState = state.dbPensions.find(function (p) { return p.id === sd.id; });
+        if (dbState) {
+            dbState.provider = sd.provider || '';
+            dbState.annualIncome = sd.annualIncome || 0;
+            dbState.startAge = sd.startAge || state.retirementAge;
+        }
+    }
+    nextDbId = savedNextDb;
+}
 
 // ============================================
 // Event Listeners
@@ -139,6 +274,40 @@ function setupEventListeners() {
         toggle.classList.toggle('open');
         body.classList.toggle('open');
     });
+
+    // Reset all data
+    document.getElementById('resetAllBtn').addEventListener('click', resetAllData);
+}
+
+/**
+ * Reset all inputs and state to defaults, clear localStorage, and rebuild UI.
+ */
+function resetAllData() {
+    if (!confirm('Reset all data to defaults? This will clear all your entered values.')) return;
+
+    // Clear storage
+    clearSavedState();
+
+    // Reset state to defaults
+    var keys = Object.keys(DEFAULT_STATE);
+    for (var i = 0; i < keys.length; i++) {
+        state[keys[i]] = JSON.parse(JSON.stringify(DEFAULT_STATE[keys[i]]));
+    }
+    nextPotId = 1;
+    nextDbId = 1;
+
+    // Clear dynamic form containers
+    document.getElementById('additionalPotsContainer').innerHTML = '';
+    document.getElementById('dbPensionsContainer').innerHTML = '';
+
+    // Repopulate form inputs
+    populateFormFromState();
+
+    // Reset desired income field
+    state.desiredIncome = null;
+
+    // Recalculate
+    calculate();
 }
 
 function bindInput(id, type, setter) {
@@ -319,6 +488,9 @@ function removeDBPension(id) {
 // Core Calculations
 // ============================================
 function calculate(skipIncomeFieldUpdate) {
+    // Persist state to localStorage
+    saveState();
+
     // Validate
     if (state.retirementAge <= state.currentAge) return;
     if (state.lifeExpectancy <= state.retirementAge) return;

@@ -87,6 +87,35 @@ body {
 .header-title-group {
     display: flex;
     flex-direction: column;
+    flex: 1;
+}
+
+.btn-reset-all {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-reset-all:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: rgba(239, 83, 80, 0.05);
+}
+
+.btn-reset-all svg {
+    flex-shrink: 0;
 }
 
 .header h1 {
