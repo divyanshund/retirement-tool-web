@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Planner | Monzo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <img src="Monzo.png" alt="Monzo" class="header-logo">
+                <div class="header-title-group">
+                    <h1>Retirement Planner</h1>
+                    <p class="header-sub">Plan your future with confidence</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="main-layout">
+            <!-- LEFT: Input Panel -->
+            <aside class="inputs-panel">
+
+                <!-- Personal Details -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon card-icon--personal">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <h2>Personal Details</h2>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="currentAge">Current Age</label>
+                            <input type="number" id="currentAge" value="30" min="18" max="80">
+                        </div>
+                        <div class="form-group">
+                            <label for="retirementAge">Retirement Age</label>
+                            <input type="number" id="retirementAge" value="67" min="50" max="80">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="annualSalary">Annual Salary</label>
+                        <div class="input-with-prefix">
+                            <span class="input-prefix">&pound;</span>
+                            <input type="text" id="annualSalary" value="35,000" inputmode="numeric">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workplace Pension -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon card-icon--pension">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                            </svg>
+                        </div>
+                        <h2>Workplace Pension</h2>
+                    </div>
+                    <div class="form-group">
+                        <label for="currentPotValue">Current Pot Value</label>
+                        <div class="input-with-prefix">
+                            <span class="input-prefix">&pound;</span>
+                            <input type="text" id="currentPotValue" value="15,000" inputmode="numeric">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="employeeContrib">Your Contribution</label>
+                            <div class="input-with-suffix">
+                                <input type="number" id="employeeContrib" value="5" min="0" max="100" step="0.5">
+                                <span class="input-suffix">%</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="employerContrib">Employer Contribution</label>
+                            <div class="input-with-suffix">
+                                <input type="number" id="employerContrib" value="3" min="0" max="100" step="0.5">
+                                <span class="input-suffix">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contribution-summary">
+                        <span>Total monthly contribution</span>
+                        <strong id="monthlyContribDisplay">&pound;0</strong>
+                    </div>
+                </div>
+
+                <!-- Additional Pension Pots -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon card-icon--additional">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="1" x2="12" y2="23"/><line x1="17" y1="5" x2="7" y2="5"/>
+                                <line x1="19" y1="9" x2="5" y2="9"/><line x1="17" y1="13" x2="7" y2="13"/>
+                                <line x1="19" y1="17" x2="5" y2="17"/><line x1="15" y1="21" x2="9" y2="21"/>
+                            </svg>
+                        </div>
+                        <h2>Additional Pension Pots</h2>
+                    </div>
+                    <p class="card-description">Add any other pension pots you have from previous employers or personal pensions.</p>
+                    <div id="additionalPotsContainer"></div>
+                    <button class="btn-add" id="addPotBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add pension pot
+                    </button>
+                </div>
+
+                <!-- Defined Benefit Pensions -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon card-icon--db">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                        <h2>Defined Benefit Pensions</h2>
+                    </div>
+                    <p class="card-description">These provide a guaranteed annual income in retirement, often from public sector or older company schemes.</p>
+                    <div id="dbPensionsContainer"></div>
+                    <button class="btn-add" id="addDbBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add defined benefit pension
+                    </button>
+                </div>
+
+                <!-- Assumptions -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon card-icon--settings">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                            </svg>
+                        </div>
+                        <h2>Assumptions</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Investment Growth Rate</label>
+                        <div class="growth-rate-selector">
+                            <button class="growth-btn" data-rate="careful">Careful (2%)</button>
+                            <button class="growth-btn active" data-rate="balanced">Balanced (5%)</button>
+                            <button class="growth-btn" data-rate="optimistic">Optimistic (8%)</button>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="inflationRate">Inflation Rate</label>
+                            <div class="input-with-suffix">
+                                <input type="number" id="inflationRate" value="2.5" min="0" max="15" step="0.1">
+                                <span class="input-suffix">%</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="lifeExpectancy">Life Expectancy</label>
+                            <input type="number" id="lifeExpectancy" value="92" min="70" max="110">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="statePensionAge">State Pension Age</label>
+                            <input type="number" id="statePensionAge" value="67" min="60" max="75">
+                        </div>
+                        <div class="form-group">
+                            <label for="statePensionAmount">Annual State Pension</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">&pound;</span>
+                                <input type="text" id="statePensionAmount" value="11,502" inputmode="numeric">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="assumptions-note">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span>All values shown in today's money, adjusted for inflation. Contributions assumed to keep pace with inflation.</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- RIGHT: Output Panel -->
+            <section class="output-panel">
+
+                <!-- Hero: Total Pot Value -->
+                <div class="card hero-card">
+                    <div class="hero-label">Projected pension value at age <span id="heroRetAge">67</span></div>
+                    <div class="hero-value">
+                        <span class="hero-currency">&pound;</span><span id="totalPotValue">0</span>
+                    </div>
+                    <div class="hero-note">
+                        Based on a <span id="heroGrowthDesc">balanced</span> (<span id="heroGrowthPct">5</span>%) growth rate, your actual pension value will be different.
+                    </div>
+                    <div class="pensions-included" id="pensionsIncluded">
+                        <!-- dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- Pot Growth Chart -->
+                <div class="card">
+                    <h3 class="card-title">Pension Pot Growth</h3>
+                    <p class="card-subtitle">How your pension could grow from now until retirement</p>
+                    <div class="chart-container chart-container--line">
+                        <canvas id="potChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Toggles Card -->
+                <div class="card">
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#218FB7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/></svg>
+                            </div>
+                            <div>
+                                <strong>Take 25% tax-free lump sum at retirement</strong>
+                                <small id="lumpSumInfo">&pound;0 at age 67</small>
+                            </div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="takeLumpSum">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#218FB7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                            <div>
+                                <strong>Include state pension</strong>
+                                <small id="statePensionInfo">&pound;11,502 each year from age 67</small>
+                            </div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="includeStatePension" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Income Section -->
+                <div class="card income-card">
+                    <div class="income-header">
+                        <h3 class="card-title">Income from your pensions</h3>
+                    </div>
+                    <div class="income-main">
+                        <div class="income-row">
+                            <span class="income-label">Desired yearly income</span>
+                            <div class="income-edit-wrapper">
+                                <div class="input-with-prefix input-compact">
+                                    <span class="input-prefix">&pound;</span>
+                                    <input type="text" id="desiredIncome" class="income-input" inputmode="numeric">
+                                </div>
+                                <button class="btn-reset" id="resetIncomeBtn" title="Reset to suggested income">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="income-row">
+                            <span class="income-label">Projected to last</span>
+                            <span class="income-value" id="incomeLastingRange">67&ndash;92 years old</span>
+                        </div>
+                        <div class="income-row" id="lumpSumRow" style="display:none;">
+                            <span class="income-label">Tax-free lump sum</span>
+                            <span class="income-value" id="lumpSumValue">&pound;0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Income Breakdown Chart -->
+                <div class="card">
+                    <h3 class="card-title">Income Breakdown by Age</h3>
+                    <p class="card-subtitle">Annual income composition throughout retirement</p>
+                    <div class="chart-container chart-container--bar">
+                        <canvas id="incomeChart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item" id="legendPersonal">
+                            <span class="legend-dot" style="background: #218FB7"></span>
+                            <span>Your pensions</span>
+                        </div>
+                        <div class="legend-item" id="legendState">
+                            <span class="legend-dot" style="background: #F0B4C8"></span>
+                            <span>State pension</span>
+                        </div>
+                        <div class="legend-item" id="legendDb" style="display:none">
+                            <span class="legend-dot" style="background: #5BB5A2"></span>
+                            <span>Defined benefit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggested Income Table -->
+                <div class="card">
+                    <h3 class="card-title">Suggested target income for different salary ranges</h3>
+                    <p class="card-subtitle">Based on research by the Department for Work and Pensions</p>
+                    <table class="salary-table">
+                        <thead>
+                            <tr>
+                                <th>Salary range</th>
+                                <th>% of salary needed</th>
+                                <th>Target income</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salaryTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Warning Card -->
+                <div class="card warning-card">
+                    <div class="warning-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <p>You could get back less than you invest and your pension could be affected by inflation. These projections are estimates based on assumptions and are not guaranteed.</p>
+                </div>
+
+                <!-- Key Assumptions -->
+                <div class="card assumptions-card">
+                    <button class="assumptions-toggle" id="assumptionsToggle">
+                        <span>See all pension projection assumptions</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="assumptions-body" id="assumptionsBody">
+                        <div class="assumption-item">
+                            <h4>Investment growth</h4>
+                            <p>We've assumed a <strong id="assumeGrowthDesc">balanced</strong> growth rate of <strong id="assumeGrowthPct">5</strong>%. Your actual pension value will be higher or lower depending on the performance of investments.</p>
+                        </div>
+                        <div class="assumption-item">
+                            <h4>Inflation rate</h4>
+                            <p>Inflation makes money less valuable over time. We use <strong id="assumeInflation">2.5</strong>% to show what your pension could be worth in today's money.</p>
+                        </div>
+                        <div class="assumption-item">
+                            <h4>Pension contributions</h4>
+                            <p>We assume your pension contributions will go up each year to keep pace with inflation, maintaining the same purchasing power.</p>
+                        </div>
+                        <div class="assumption-item">
+                            <h4>State pension income</h4>
+                            <p>We assume you'll receive the full state pension. How much State Pension you actually get depends on the number of qualifying National Insurance years over your lifetime.</p>
+                        </div>
+                        <div class="assumption-item">
+                            <h4>Tax-free lump sum</h4>
+                            <p>You can usually take up to 25% of your pension fund as a tax-free lump sum, subject to a maximum of &pound;268,275. This will reduce your future retirement income.</p>
+                        </div>
+                        <div class="assumption-item">
+                            <h4>Tax relief</h4>
+                            <p>Most people get tax relief on their pension contributions. We assume tax relief is already included in your contributions.</p>
+                        </div>
+                        <div class="assumption-item">
+                            <h4>Pension fees</h4>
+                            <p>We assume yearly pension fees will be around 0.75%, which is the same as you'd pay with most providers. This is already factored into the growth rate.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <img src="Monzo.png" alt="Monzo" class="footer-logo">
+            <p>This tool provides estimates for illustrative purposes only. It is not financial advice. Speak to a qualified financial advisor for personal guidance.</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
