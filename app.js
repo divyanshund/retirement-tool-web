@@ -737,6 +737,9 @@ function updateUI(results, skipIncomeFieldUpdate) {
     // Salary suggestion table
     updateSalaryTable(s.annualSalary);
 
+    // Lifestyle widget
+    updateLifestyleWidget(results);
+
     // Assumption details
     document.getElementById('assumeGrowthDesc').textContent = GROWTH_LABELS[s.growthRate];
     document.getElementById('assumeGrowthPct').textContent = GROWTH_RATES[s.growthRate];
@@ -779,6 +782,73 @@ function updateSalaryTable(salary) {
             '</tr>';
     }
     tbody.innerHTML = html;
+}
+
+// ============================================
+// Lifestyle Widget
+// ============================================
+var LIFESTYLE_TIERS = [
+    { id: 'minimum', label: 'Minimum', threshold: 14400, max: 31300 },
+    { id: 'moderate', label: 'Moderate', threshold: 31300, max: 43100 },
+    { id: 'comfortable', label: 'Comfortable', threshold: 43100, max: 60000 },
+];
+
+function updateLifestyleWidget(results) {
+    // Total income = desired income + state pension (at state pension age)
+    var totalIncome = results.displayIncome;
+    if (state.includeStatePension) {
+        totalIncome += state.statePensionAmount;
+    }
+
+    // Determine which tier they fall into
+    var tierLevel; // 0 = below minimum, 1 = minimum, 2 = moderate, 3 = comfortable
+    if (totalIncome < 14400) {
+        tierLevel = 0;
+    } else if (totalIncome < 31300) {
+        tierLevel = 1;
+    } else if (totalIncome < 43100) {
+        tierLevel = 2;
+    } else {
+        tierLevel = 3;
+    }
+
+    // Update tier highlighting
+    var tierMin = document.getElementById('tierMinimum');
+    var tierMod = document.getElementById('tierModerate');
+    var tierCom = document.getElementById('tierComfortable');
+    tierMin.classList.toggle('active', tierLevel >= 1);
+    tierMod.classList.toggle('active', tierLevel >= 2);
+    tierCom.classList.toggle('active', tierLevel >= 3);
+
+    // Position the bar fill and marker
+    // Map income to a percentage: 0 = £0, 100% = £60,000+
+    var barMax = 60000;
+    var pct = Math.min(100, Math.max(0, (totalIncome / barMax) * 100));
+
+    document.getElementById('lifestyleBarFill').style.width = pct + '%';
+
+    var marker = document.getElementById('lifestyleMarker');
+    marker.style.left = pct + '%';
+
+    document.getElementById('lifestyleMarkerLabel').textContent = formatCurrency(totalIncome) + '/yr';
+
+    // Position threshold lines
+    document.getElementById('thresholdModerate').style.left = (31300 / barMax * 100) + '%';
+    document.getElementById('thresholdComfortable').style.left = (43100 / barMax * 100) + '%';
+
+    // Verdict text
+    var verdict = document.getElementById('lifestyleVerdict');
+    if (tierLevel === 0) {
+        verdict.innerHTML = 'Your projected income of <strong>' + formatCurrency(totalIncome) + '/yr</strong> is below the minimum retirement living standard. Consider increasing your contributions.';
+    } else if (tierLevel === 1) {
+        var gap = 31300 - totalIncome;
+        verdict.innerHTML = 'You\'re on track for a <strong>minimum</strong> retirement lifestyle. An extra <strong>' + formatCurrency(gap) + '/yr</strong> would reach the moderate standard.';
+    } else if (tierLevel === 2) {
+        var gap2 = 43100 - totalIncome;
+        verdict.innerHTML = 'You\'re on track for a <strong>moderate</strong> retirement lifestyle. An extra <strong>' + formatCurrency(gap2) + '/yr</strong> would reach the comfortable standard.';
+    } else {
+        verdict.innerHTML = 'You\'re on track for a <strong>comfortable</strong> retirement lifestyle. Well done!';
+    }
 }
 
 // ============================================
