@@ -245,7 +245,7 @@ function removePensionPot(id) {
 // ============================================
 function addDBPension() {
     const id = nextDbId++;
-    state.dbPensions.push({ id, provider: '', annualIncome: 0 });
+    state.dbPensions.push({ id, provider: '', annualIncome: 0, startAge: state.retirementAge });
 
     const container = document.getElementById('dbPensionsContainer');
     const item = document.createElement('div');
@@ -258,16 +258,24 @@ function addDBPension() {
         '  <label>Provider Name</label>' +
         '  <input type="text" class="db-provider" data-db-id="' + id + '" placeholder="e.g. Teachers\' Pension">' +
         '</div>' +
-        '<div class="form-group">' +
-        '  <label>Expected Annual Income at Retirement</label>' +
-        '  <div class="input-with-prefix">' +
-        '    <span class="input-prefix">&pound;</span>' +
-        '    <input type="text" class="db-income" data-db-id="' + id + '" value="0" inputmode="numeric">' +
+        '<div class="form-row">' +
+        '  <div class="form-group">' +
+        '    <label>Annual Income</label>' +
+        '    <div class="input-with-prefix">' +
+        '      <span class="input-prefix">&pound;</span>' +
+        '      <input type="text" class="db-income" data-db-id="' + id + '" value="0" inputmode="numeric">' +
+        '    </div>' +
+        '  </div>' +
+        '  <div class="form-group">' +
+        '    <label>Starts from Age</label>' +
+        '    <input type="number" class="db-start-age" data-db-id="' + id + '" value="' + state.retirementAge + '" min="50" max="80">' +
         '  </div>' +
         '</div>';
     container.appendChild(item);
 
     const incomeInput = item.querySelector('.db-income');
+    const startAgeInput = item.querySelector('.db-start-age');
+
     incomeInput.addEventListener('input', () => {
         updateDBFromDOM(id);
         state.desiredIncome = null;
@@ -281,6 +289,11 @@ function addDBPension() {
         incomeInput.value = val > 0 ? val.toString() : '';
     });
 
+    startAgeInput.addEventListener('input', () => {
+        updateDBFromDOM(id);
+        state.desiredIncome = null;
+    });
+
     calculate();
 }
 
@@ -290,6 +303,7 @@ function updateDBFromDOM(id) {
     const item = document.getElementById('db-' + id);
     db.provider = item.querySelector('.db-provider').value;
     db.annualIncome = parseCurrency(item.querySelector('.db-income').value);
+    db.startAge = parseFloat(item.querySelector('.db-start-age').value) || state.retirementAge;
     calculate();
 }
 
@@ -352,13 +366,25 @@ function calculate(skipIncomeFieldUpdate) {
     const lumpSum = state.takeLumpSum ? Math.min(totalPotAtRetirement * 0.25, lumpSumMax) : 0;
     const drawdownPot = totalPotAtRetirement - lumpSum;
 
-    // --- Defined benefit total annual income ---
-    const dbIncome = state.dbPensions.reduce(function (sum, p) { return sum + (p.annualIncome || 0); }, 0);
+    // --- Helper: compute total DB income for a given age ---
+    function dbIncomeAtAge(age) {
+        var total = 0;
+        for (var i = 0; i < state.dbPensions.length; i++) {
+            var p = state.dbPensions[i];
+            if (age >= (p.startAge || 0)) {
+                total += (p.annualIncome || 0);
+            }
+        }
+        return total;
+    }
+
+    // Max DB income (when all pensions are active)
+    const dbIncomeMax = state.dbPensions.reduce(function (sum, p) { return sum + (p.annualIncome || 0); }, 0);
 
     // --- Calculate sustainable total income using binary search ---
     const sustainableIncome = calcSustainableTotalIncome(
         drawdownPot, realGrowth, state.retirementAge, state.lifeExpectancy,
-        state.statePensionAge, state.statePensionAmount, state.includeStatePension, dbIncome
+        state.statePensionAge, state.statePensionAmount, state.includeStatePension, dbIncomeAtAge
     );
 
     // --- Use desired income or sustainable ---
@@ -372,7 +398,7 @@ function calculate(skipIncomeFieldUpdate) {
     for (let age = state.retirementAge; age <= state.lifeExpectancy; age++) {
         const stateIncome = (state.includeStatePension && age >= state.statePensionAge)
             ? state.statePensionAmount : 0;
-        const dbIncomeYear = dbIncome;
+        const dbIncomeYear = dbIncomeAtAge(age);
 
         // How much the user needs from the pot this year
         const neededFromPot = Math.max(0, displayIncome - stateIncome - dbIncomeYear);
@@ -414,7 +440,7 @@ function calculate(skipIncomeFieldUpdate) {
         wpProjected: wpPot,
         additionalDetails: additionalDetails,
         additionalTotal: additionalTotal,
-        dbIncome: dbIncome,
+        dbIncome: dbIncomeMax,
         sustainableIncome: sustainableIncome,
         displayIncome: displayIncome,
         incomeByYear: incomeByYear,
@@ -432,28 +458,34 @@ function calculate(skipIncomeFieldUpdate) {
  * Find the maximum sustainable total annual income such that the pot
  * lasts from retirement age to life expectancy.
  * Uses binary search over the income level, simulating drawdown each time.
- * Accounts for state pension starting at a different age.
+ * Accounts for state pension and DB pensions starting at different ages.
+ * dbIncomeFn is a function(age) returning DB income for that year.
  */
-function calcSustainableTotalIncome(pot, realGrowthRate, retirementAge, lifeExpectancy, spAge, spAmount, includeSP, dbIncome) {
+function calcSustainableTotalIncome(pot, realGrowthRate, retirementAge, lifeExpectancy, spAge, spAmount, includeSP, dbIncomeFn) {
     if (pot <= 0) {
-        // No pot — income is just state + DB
-        const minState = (includeSP && retirementAge >= spAge) ? spAmount : 0;
-        return dbIncome + minState;
+        // No pot — income is just state + DB at retirement age
+        var minState = (includeSP && retirementAge >= spAge) ? spAmount : 0;
+        return dbIncomeFn(retirementAge) + minState;
     }
 
     // Lower bound: income from guaranteed sources only (no pot drawdown)
-    const guarLow = dbIncome;
+    var guarLow = dbIncomeFn(retirementAge);
     // Upper bound: generous estimate
-    const years = lifeExpectancy - retirementAge;
-    const guarHigh = pot / Math.max(years, 1) * 3 + dbIncome + (includeSP ? spAmount : 0);
+    var years = lifeExpectancy - retirementAge;
+    var maxDb = 0;
+    for (var a = retirementAge; a <= lifeExpectancy; a++) {
+        var d = dbIncomeFn(a);
+        if (d > maxDb) maxDb = d;
+    }
+    var guarHigh = pot / Math.max(years, 1) * 3 + maxDb + (includeSP ? spAmount : 0);
 
-    let low = guarLow;
-    let high = Math.max(guarHigh, guarLow + 1);
+    var low = guarLow;
+    var high = Math.max(guarHigh, guarLow + 1);
 
     // Binary search for sustainable income
-    for (let i = 0; i < 60; i++) {
-        const mid = (low + high) / 2;
-        const depleted = simulateDrawdown(pot, mid, realGrowthRate, retirementAge, lifeExpectancy, spAge, spAmount, includeSP, dbIncome);
+    for (var i = 0; i < 60; i++) {
+        var mid = (low + high) / 2;
+        var depleted = simulateDrawdown(pot, mid, realGrowthRate, retirementAge, lifeExpectancy, spAge, spAmount, includeSP, dbIncomeFn);
         if (depleted) {
             high = mid;
         } else {
@@ -467,13 +499,15 @@ function calcSustainableTotalIncome(pot, realGrowthRate, retirementAge, lifeExpe
 /**
  * Returns true if the pot is depleted before reaching life expectancy
  * at the given total income level.
+ * dbIncomeFn is a function(age) returning DB income for that year.
  */
-function simulateDrawdown(pot, totalIncome, realGrowthRate, retirementAge, lifeExpectancy, spAge, spAmount, includeSP, dbIncome) {
-    let remaining = pot;
+function simulateDrawdown(pot, totalIncome, realGrowthRate, retirementAge, lifeExpectancy, spAge, spAmount, includeSP, dbIncomeFn) {
+    var remaining = pot;
 
-    for (let age = retirementAge; age <= lifeExpectancy; age++) {
-        const stateInc = (includeSP && age >= spAge) ? spAmount : 0;
-        const neededFromPot = Math.max(0, totalIncome - stateInc - dbIncome);
+    for (var age = retirementAge; age <= lifeExpectancy; age++) {
+        var stateInc = (includeSP && age >= spAge) ? spAmount : 0;
+        var dbInc = dbIncomeFn(age);
+        var neededFromPot = Math.max(0, totalIncome - stateInc - dbInc);
 
         remaining -= neededFromPot;
         if (remaining < -0.01) return true; // depleted
