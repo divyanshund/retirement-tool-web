@@ -117,9 +117,9 @@ let incomeChart = null;
 document.addEventListener('DOMContentLoaded', () => {
     var hadSaved = loadState();
     populateFormFromState();
-    if (hadSaved) rebuildDynamicForms();
-    setupEventListeners();
     createCharts();
+    setupEventListeners();
+    if (hadSaved) rebuildDynamicForms();
     calculate();
 });
 
@@ -794,11 +794,8 @@ var LIFESTYLE_TIERS = [
 ];
 
 function updateLifestyleWidget(results) {
-    // Total income = desired income + state pension (at state pension age)
+    // displayIncome already includes state pension + DB income
     var totalIncome = results.displayIncome;
-    if (state.includeStatePension) {
-        totalIncome += state.statePensionAmount;
-    }
 
     // Determine which tier they fall into
     var tierLevel; // 0 = below minimum, 1 = minimum, 2 = moderate, 3 = comfortable
@@ -1035,6 +1032,8 @@ function createIncomeChart() {
 }
 
 function updateCharts(results) {
+    if (!potChart || !incomeChart) return;
+
     // --- Pot Growth Chart ---
     var potLabels = [];
     var potData = [];
