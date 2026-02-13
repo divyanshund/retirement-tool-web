@@ -540,6 +540,16 @@ input[type="number"]::-webkit-outer-spin-button {
     margin-top: 12px;
 }
 
+.hero-chart-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.06);
+    margin: 20px -24px 16px;
+}
+
+.hero-card .chart-container--line {
+    margin-top: 0;
+}
+
 .pension-badge {
     display: inline-flex;
     align-items: center;

@@ -233,7 +233,7 @@
             <!-- RIGHT: Output Panel -->
             <section class="output-panel">
 
-                <!-- Hero: Total Pot Value -->
+                <!-- 1. Hero + Pot Growth Chart (combined) -->
                 <div class="card hero-card">
                     <div class="hero-label">Projected pension value at age <span id="heroRetAge">67</span></div>
                     <div class="hero-value">
@@ -245,18 +245,13 @@
                     <div class="pensions-included" id="pensionsIncluded">
                         <!-- dynamically populated -->
                     </div>
-                </div>
-
-                <!-- Pot Growth Chart -->
-                <div class="card">
-                    <h3 class="card-title">Pension Pot Growth</h3>
-                    <p class="card-subtitle">How your pension could grow from now until retirement</p>
+                    <div class="hero-chart-divider"></div>
                     <div class="chart-container chart-container--line">
                         <canvas id="potChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Income Section -->
+                <!-- 2. Income Section -->
                 <div class="card income-card">
                     <div class="income-header">
                         <h3 class="card-title">Income from your pensions</h3>
@@ -285,7 +280,30 @@
                     </div>
                 </div>
 
-                <!-- Toggles Card -->
+                <!-- 3. Income Breakdown Chart -->
+                <div class="card">
+                    <h3 class="card-title">Income Breakdown by Age</h3>
+                    <p class="card-subtitle">Annual income composition throughout retirement</p>
+                    <div class="chart-container chart-container--bar">
+                        <canvas id="incomeChart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item" id="legendPersonal">
+                            <span class="legend-dot" style="background: #218FB7"></span>
+                            <span>Your pensions</span>
+                        </div>
+                        <div class="legend-item" id="legendState">
+                            <span class="legend-dot" style="background: #F0B4C8"></span>
+                            <span>State pension</span>
+                        </div>
+                        <div class="legend-item" id="legendDb" style="display:none">
+                            <span class="legend-dot" style="background: #5BB5A2"></span>
+                            <span>Defined benefit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Toggles Card -->
                 <div class="card">
                     <div class="toggle-row">
                         <div class="toggle-info">
@@ -320,7 +338,7 @@
                     </div>
                 </div>
 
-                <!-- Lifestyle Widget -->
+                <!-- 5. Lifestyle Widget -->
                 <div class="card lifestyle-card" id="lifestyleCard">
                     <h3 class="card-title">What lifestyle could you expect?</h3>
                     <p class="card-subtitle">Based on UK Retirement Living Standards (PLSA)</p>
@@ -366,29 +384,6 @@
                     </div>
 
                     <div class="lifestyle-verdict" id="lifestyleVerdict"></div>
-                </div>
-
-                <!-- Income Breakdown Chart -->
-                <div class="card">
-                    <h3 class="card-title">Income Breakdown by Age</h3>
-                    <p class="card-subtitle">Annual income composition throughout retirement</p>
-                    <div class="chart-container chart-container--bar">
-                        <canvas id="incomeChart"></canvas>
-                    </div>
-                    <div class="chart-legend">
-                        <div class="legend-item" id="legendPersonal">
-                            <span class="legend-dot" style="background: #218FB7"></span>
-                            <span>Your pensions</span>
-                        </div>
-                        <div class="legend-item" id="legendState">
-                            <span class="legend-dot" style="background: #F0B4C8"></span>
-                            <span>State pension</span>
-                        </div>
-                        <div class="legend-item" id="legendDb" style="display:none">
-                            <span class="legend-dot" style="background: #5BB5A2"></span>
-                            <span>Defined benefit</span>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Suggested Income Table -->
